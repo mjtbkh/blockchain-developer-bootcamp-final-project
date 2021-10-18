@@ -8,7 +8,6 @@ export const initProvider = async () => {
   if (typeof window.ethereum !== undefined) {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     let signer = provider.getSigner();
-    console.log(provider.getNetwork());
     return await signer.getAddress();
   }
 };
