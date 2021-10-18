@@ -1,0 +1,14 @@
+.DS_*
+*.log
+logs
+**/*.backup.*
+**/*.back.*
+
+build
+
+node_modules
+
+# dotenv files
+.env
+.env.test
+.env.production

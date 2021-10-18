@@ -1,0 +1,20 @@
+body {
+    font-family: 'Nunito', sans-serif;
+}
+main {
+    background: rgba(225, 225, 225, 0.2) center right no-repeat scroll;
+    background-image: url(/img/blob.svg), url(/img/blob2.svg);
+    backdrop-filter: blur(160px) saturate(180%);
+    -webkit-backdrop-filter: blur(160px) saturate(180%);
+    background-blend-mode: color-dodge;
+}
+
+.visible-notification {
+    visibility: visible;
+    transition: all 150ms;
+}
+.hidden-notification {
+    visibility: hidden;
+    transition: all 70ms;
+    transform: translateX(-50%) scale(0.5);
+}
