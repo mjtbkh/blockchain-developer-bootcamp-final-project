@@ -2,15 +2,14 @@ import { useContext, useEffect, useState } from "react";
 import { WalletContext } from "../contexts/WalletContext";
 import { requestBalance } from "../hooks/connectWallet";
 import { FixedNumber } from "ethers";
-import detectEthereumProvider from "@metamask/detect-provider";
 
 export default function AccountCard() {
-  const { currentWallet, isCardOpen, setIsCardOpen } =
+  const { currentWallet, isCardOpen } =
     useContext(WalletContext);
   const [balance, setBalance] = useState("");
 
   useEffect(() => {
-    if (window.ethereum !== undefined && currentWallet) handleFetch();
+    if (window.ethereum !== "undefined" && currentWallet) handleFetch();
   }, [isCardOpen]);
 
   const handleFetch = async () => {
@@ -32,7 +31,6 @@ export default function AccountCard() {
     <>
       {isCardOpen && (
         <dialog
-          // onClick={() => setIsCardOpen(false)}
           className="flex flex-row justify-between top-1/3 ring-2 ring-gray-300 dark:ring-gray-600 bg-gray-200 border z-20 text-gray-700 dark:bg-gray-800 dark:text-gray-50 dark:border-0 text-center p-0 rounded-md shadow-lg"
         >
           <section className="shadow-inner px-4 py-6 align-middle justify-center">

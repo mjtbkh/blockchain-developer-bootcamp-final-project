@@ -5,7 +5,7 @@ export const requestAccount = async () => {
 };
 
 export const initProvider = async () => {
-  if (typeof window.ethereum !== undefined) {
+  if (typeof window.ethereum !== "undefined") {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     let signer = provider.getSigner();
     return await signer.getAddress();
@@ -13,14 +13,14 @@ export const initProvider = async () => {
 };
 
 export const requestChainId = async () => {
-  if (typeof window.ethereum !== undefined) {
+  if (typeof window.ethereum !== "undefined") {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     return (await provider.getNetwork()).chainId;
   }
 };
 
 export const requestBalance = async () => {
-  if (typeof window.ethereum !== undefined) {
+  if (typeof window.ethereum !== "undefined") {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     return provider.getBalance(localStorage.getItem("connectedWallet"));
   }

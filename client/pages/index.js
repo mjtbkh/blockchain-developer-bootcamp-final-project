@@ -35,7 +35,7 @@ export default function Home() {
 
   useEffect(async () => {
     if (
-      typeof localStorage !== undefined &&
+      typeof localStorage !== "undefined" &&
       localStorage.getItem("connectedWallet") &&
       window.ethereum === (await fetchProvider()) &&
       window.ethereum.isConnected()
@@ -46,15 +46,23 @@ export default function Home() {
       localStorage.removeItem("connectedWallet");
     }
 
-    if (typeof window !== undefined && localStorage.getItem("isDarkMode")) {
+    if (typeof window !== "undefined" && localStorage.getItem("isDarkMode")) {
       setIsDarkMode(Boolean(Number(localStorage.getItem("isDarkMode"))));
     }
   }, []);
 
   const handleConnectWallet = async () => {
     setIsConnecting(true);
-    if (typeof window.ethereum === undefined || !window.ethereum.isMetaMask) {
+    if (typeof window.ethereum === "undefined") {
       console.log(typeof window.ethereum);
+      setNotificationMessage(
+        "MetaMask not detected! install from: https://metamask.io/"
+      );
+      setIsNotificationOpen(true);
+      setIsConnecting(false);
+      return 0;
+    }
+    if (!window.ethereum.isMetaMask) {
       setNotificationMessage(
         "MetaMask not detected! install from: https://metamask.io/"
       );
