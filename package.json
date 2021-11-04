@@ -1,1 +1,11 @@
-{}
+{
+  "devDependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.3.2",
+    "@openzeppelin/truffle-upgrades": "^1.10.0"
+  },
+  "scripts": {
+    "build": "truffle compile",
+    "dev": "truffle migrate",
+    "test": "truffle test"
+  }
+}

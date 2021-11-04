@@ -12,3 +12,7 @@ node_modules
 .env
 .env.test
 .env.production
+
+# contract builds
+/contracts/*.json
+/.openzeppelin
