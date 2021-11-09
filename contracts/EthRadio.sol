@@ -6,7 +6,11 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
+/// @title: EthRadio, a premium-membership podcast on blockchain
+/// @author Mojtaba Khodami
+/// @notice This is an experimental contract and needs lots of work to be production-ready
 /// @custom:security-contact mojtabakh@hotmail.com
+/// @custom:experimental: This is an experimental contract
 contract EthRadio is
     Initializable,
     PausableUpgradeable,
@@ -39,6 +43,7 @@ contract EthRadio is
         bool isActive;
     }
 
+    /// @notice Initialize values for contract deployment
     /// @dev Contract initializer calls initializer of inherited openzeppelin contracts
     /// @dev Modifier `initializer` allows contract creation only to be done once
     function initialize() public initializer {
@@ -53,16 +58,19 @@ contract EthRadio is
         _setupRole(UPGRADER_ROLE, msg.sender);
     }
 
+    /// @notice Pause contract in case there is an emergency situation
     /// @dev `pause` function calls _pause method under @openzeppelin/PausableUpgradeable
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
+    /// @notice Unpause the contract after a pause, once everything is clear
     /// @dev `unpause` function calls _unpause method under @openzeppelin/PausableUpgradeable
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
     }
 
+    /// @notice Enable UUPS upgrade method
     /// @dev Only `UPGRADER_ROLE` should be able to upgrade to the new implementation of contract
     /// @dev Each new implemetation should inherit or extend the previous version of contract
     function _authorizeUpgrade(address newImplementation)
@@ -71,6 +79,7 @@ contract EthRadio is
         onlyRole(UPGRADER_ROLE)
     {}
 
+    /// @notice Revert the transaction if it's failing
     /// @dev `fallback` will fully revert the tx if there is no proper input or call
     fallback() external {
         revert();
@@ -79,8 +88,6 @@ contract EthRadio is
     /*
      * Events
      */
-
-    // event for invitation of a new publisher
 
     // event for subscription of a new account
     event logNewSubscription(address _subscriberId);
@@ -100,16 +107,19 @@ contract EthRadio is
     // event for closure of podcast
     event logClosure();
 
+    /// @notice Invite a new publisher to the podcast
     /// @dev Adds new publisher and sets up proper role for provided address
     function invitePublisher(address _newPublisher) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _setupRole(PUBLISHER_ROLE, _newPublisher);
     }
 
+    /// @notice Revoke a publsiher access
     /// @dev Removes publisher and revokes publisher role for provided address
     function revokePublisher(address _publisher) public onlyRole(DEFAULT_ADMIN_ROLE) {
         revokeRole(PUBLISHER_ROLE, _publisher);
     }
 
+    /// @notice Subscribe a new user to the podcast
     /// @dev Subscripting to the contract adds SUBSCRIBER_ROLE to the msg.sender
     function subscribe() public {
         require(!hasRole(SUBSCRIBER_ROLE, msg.sender));
@@ -124,6 +134,7 @@ contract EthRadio is
         emit logNewSubscription(msg.sender);
     }
 
+    /// @notice Deposit eth by a subscriber
     /// @dev Subscribers can deposit `ETH` to the contract to receive episodes
     function deposit() public payable onlyRole(SUBSCRIBER_ROLE) {
         require(msg.value > 0);
@@ -133,7 +144,7 @@ contract EthRadio is
         emit logDeposit(msg.sender, msg.value);
     }
 
-    /// @dev Subscribers are able to withdraw thier funds from the contract
+    /// @notice Subscribers are able to withdraw thier funds from the contract
     function withdraw(uint256 _amount) public payable onlyRole(SUBSCRIBER_ROLE) {
         require(Balances[msg.sender] > 0);
         Balances[msg.sender] -= _amount;
