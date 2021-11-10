@@ -6,11 +6,11 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-/// @title: EthRadio, a premium-membership podcast on blockchain
+/// @title EthRadio, a premium-membership podcast on blockchain
 /// @author Mojtaba Khodami
 /// @notice This is an experimental contract and needs lots of work to be production-ready
 /// @custom:security-contact mojtabakh@hotmail.com
-/// @custom:experimental: This is an experimental contract
+/// @custom:experimental This is an experimental contract
 contract EthRadio is
     Initializable,
     PausableUpgradeable,
@@ -89,32 +89,46 @@ contract EthRadio is
      * Events
      */
 
-    // event for subscription of a new account
+    /// @notice event for subscription of a new account
+    /// @param _subscriberId The ethereum address as user id
     event logNewSubscription(address _subscriberId);
 
-    // event for new deposit into contract
+    /// @notice event for new deposit into contract
+    /// @param _subscriberId The ethereum address as user id
+    /// @param _amount The amount of ether deposited, in wei 
     event logDeposit(address _subscriberId, uint256 _amount);
 
-    // event for user withdrawals from contract
-    event logWithdraw(address _user, uint256 _amount);
+    /// @notice event for user withdrawals from contract
+    /// @param _subscriberId The ethereum address as user id
+    /// @param _amount The amount of ether withdrawn, in wei
+    event logWithdraw(address _subscriberId, uint256 _amount);
 
-    // event for punlishment of a new episeode
+    /// @notice event for propagating errors to the end user
+    /// @dev The error message returned from .call() as a `bytes` type
+    /// @param _message The messages returned in bytes format
+    event logError(bytes _message);
+
+    /// @notice event for punlishment of a new episeode
+    /// @param _episodeId The id of newly published episode
     event logEpisodePublished(uint16 _episodeId);
 
-    // event for deletion of an episode
+    /// @notice event for deletion of an episode
+    /// @param _episodeId The id of deleted episode
     event logEpisodeDeleted(uint16 _episodeId);
 
-    // event for closure of podcast
+    /// @notice event for closure of podcast
     event logClosure();
 
     /// @notice Invite a new publisher to the podcast
     /// @dev Adds new publisher and sets up proper role for provided address
+    /// @param _newPublisher The public ethreum address going to be registered as a pulisher in the contract
     function invitePublisher(address _newPublisher) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _setupRole(PUBLISHER_ROLE, _newPublisher);
     }
 
     /// @notice Revoke a publsiher access
     /// @dev Removes publisher and revokes publisher role for provided address
+    /// @param _publisher The public ethereum address of the publisher fired out of contract
     function revokePublisher(address _publisher) public onlyRole(DEFAULT_ADMIN_ROLE) {
         revokeRole(PUBLISHER_ROLE, _publisher);
     }
@@ -145,10 +159,16 @@ contract EthRadio is
     }
 
     /// @notice Subscribers are able to withdraw thier funds from the contract
+    /// @param _amount The amount of ether in wei going to be withdrawn from contract
     function withdraw(uint256 _amount) public payable onlyRole(SUBSCRIBER_ROLE) {
-        require(Balances[msg.sender] > 0);
+        require(Balances[msg.sender] > 0);    
         Balances[msg.sender] -= _amount;
-        payable(msg.sender).transfer(_amount);
+        (bool result, bytes memory error) = msg.sender.call{value: _amount}("");
+        if(!result) {
+            emit logError(error);
+        }
+        require(result);
+
 
         if(Balances[msg.sender] == 0) {
             Subscribers[msg.sender].isActive = false;
