@@ -4,8 +4,7 @@ import { requestBalance } from "../hooks/connectWallet";
 import { FixedNumber } from "ethers";
 
 export default function AccountCard() {
-  const { currentWallet, isCardOpen } =
-    useContext(WalletContext);
+  const { currentWallet, isCardOpen, setIsCardOpen } = useContext(WalletContext);
   const [balance, setBalance] = useState("");
 
   useEffect(() => {
@@ -19,9 +18,9 @@ export default function AccountCard() {
   };
 
   const handleCloseProvider = async () => {
-    localStorage.removeItem('connectedWallet');
-    window.location.reload()
-  }
+    localStorage.removeItem("connectedWallet");
+    window.location.reload();
+  };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(currentWallet);
@@ -30,11 +29,54 @@ export default function AccountCard() {
   return (
     <>
       {isCardOpen && (
-        <dialog
-          className="flex flex-row justify-between top-1/3 ring-2 ring-gray-300 dark:ring-gray-600 bg-gray-200 border z-20 text-gray-700 dark:bg-gray-800 dark:text-gray-50 dark:border-0 text-center p-0 rounded-md shadow-lg"
-        >
-          <section className="shadow-inner px-4 py-6 align-middle justify-center">
-            ETH
+        <dialog className="flex flex-row justify-between top-1/3 ring-2 ring-gray-300 dark:ring-gray-600 bg-gray-200 border z-20 text-gray-700 dark:bg-gray-800 dark:text-gray-50 dark:border-0 text-center p-0 rounded-md shadow-lg">
+          <section className="shadow-inner px-4 py-6 align-middle flex flex-col gap-4 justify-around">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 cursor-pointer"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              onClick={() => setIsCardOpen(!isCardOpen)}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+              />
+            </svg>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 cursor-pointer text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              onClick={handleCloseProvider}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
           </section>
           <section className="flex flex-col gap-4 px-4 py-6 bg-white dark:bg-gray-700 dark:text-white align-middle justify-center rounded-md">
             <span
@@ -83,7 +125,6 @@ export default function AccountCard() {
               </b>{" "}
               ETH balance
             </span>
-            <button className="bg-red-500 shadow-inner rounded-md text-white w-1/2 mx-auto py-2" onClick={handleCloseProvider}>Disconnect</button>
           </section>
         </dialog>
       )}

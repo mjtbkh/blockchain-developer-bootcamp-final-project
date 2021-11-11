@@ -1,71 +1,120 @@
 import Head from "next/head";
 import { useContext } from "react";
 import { AccountCard } from "./index";
-import { NotificationContext, ThemeContext, WalletContext } from "../contexts";
+import {
+  NotificationContext,
+  ThemeContext,
+  WalletContext,
+  FormContext,
+} from "../contexts";
+import PublishForm from "./PublishForm";
 
 export default function Header({ title }) {
   const { isDarkMode, setIsDarkMode } = useContext(ThemeContext);
   const { isCardOpen, setIsCardOpen, currentWallet, isWalletConnected } =
     useContext(WalletContext);
-    const { setIsNotificationOpen, setNotificationMessage} = useContext(NotificationContext)
+  const { setIsNotificationOpen, setNotificationMessage } =
+    useContext(NotificationContext);
+  const { isFormOpen, setIsFormOpen } = useContext(FormContext);
   return (
     <>
       <Head>
         <title>{title}</title>
         <link rel="icon" href="/favicon.ico" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="true"
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;400;900&display=swap"
           rel="stylesheet"
         />
       </Head>
 
-      <AccountCard
-        isOpen={isCardOpen}
-        setIsOpen={setIsCardOpen}
-        address={currentWallet}
-      />
+      <AccountCard isOpen={isCardOpen} address={currentWallet} />
+
+      <PublishForm isOpen={isFormOpen} setIsOpen={setIsFormOpen} />
 
       <header className="flex flex-row bg-white dark:bg-indigo-700 bg-opacity-40 dark:bg-opacity-60 p-4 justify-between w-full fixed top-0 shadow-sm transition-all duration-300 z-20">
-        <section className="flex justify-between items-center overflow-hidden gap-2 pr-2 bg-gray-800 text-white rounded-md cursor-pointer">
-          <span className="bg-gray-700 text-white p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
-              />
-            </svg>
-          </span>
-          {!isWalletConnected && (
-            <span
-              className="p-1"
-              onClick={() => {
-                setNotificationMessage("Connect to MetaMask first!");
-                setIsNotificationOpen(true);
-              }}
-            >
-              Wallet not connected
+        <section className="flex flex-row gap-4">
+          <section className="flex justify-between items-center overflow-hidden gap-2 pr-2 bg-gray-800 text-white rounded-md cursor-pointer">
+            <span className="bg-gray-700 text-white p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
+                />
+              </svg>
             </span>
-          )}
+            {!isWalletConnected && (
+              <span
+                className="p-1"
+                onClick={() => {
+                  setNotificationMessage("Connect to MetaMask first!");
+                  setIsNotificationOpen(true);
+                }}
+              >
+                Wallet not connected
+              </span>
+            )}
+            {isWalletConnected && (
+              <>
+                <span
+                  className="select-none"
+                  onClick={() => {
+                    if (isFormOpen) setIsFormOpen(false);
+                    setIsCardOpen(!isCardOpen);
+                  }}
+                >
+                  {` ${currentWallet.substring(
+                    0,
+                    4
+                  )}...${currentWallet.substring(38)} `}
+                </span>
+              </>
+            )}
+          </section>
+
           {isWalletConnected && (
-            <span
-              className="select-none"
-              onClick={() => setIsCardOpen(!isCardOpen)}
-            >
-              {" "}
-              {currentWallet}{" "}
-            </span>
+            <section className="flex items-center overflow-hidden gap-2 pr-2 bg-gray-800 text-white rounded-md cursor-pointer">
+              <span className="bg-gray-700 text-white p-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </span>
+              <button
+                onClick={() => {
+                  if (isCardOpen) setIsCardOpen(false);
+                  setIsFormOpen(!isFormOpen);
+                }}
+              >
+                Publish episode
+              </button>
+            </section>
           )}
         </section>
+
         <section
           className="bg-gray-800 text-white rounded-full p-1 cursor-pointer"
           onClick={() => {

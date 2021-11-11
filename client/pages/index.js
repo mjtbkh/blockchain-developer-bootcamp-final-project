@@ -10,6 +10,7 @@ import {
   NotificationContext,
   ThemeContext,
   WalletContext,
+  FormContext
 } from "../contexts";
 import detectEthereumProvider from "@metamask/detect-provider";
 import ConnectWallet from "../components/ConnectWallet";
@@ -22,6 +23,8 @@ export default function Home() {
   const { setIsNotificationOpen, notificationMessage, setNotificationMessage } =
     useContext(NotificationContext);
   const { chainId, setChainId } = useContext(ChainIdContext);
+  const { isFormOpen, setIsFormOpen } = useContext(FormContext);
+
   const fetchProvider = async () => {
     return await detectEthereumProvider();
   };
@@ -105,12 +108,14 @@ export default function Home() {
 
       <main
         className={`dark:bg-gray-700 dark:text-white flex flex-col items-center justify-center w-full flex-1 px-20 py-32 text-center transition-all duration-300 z-10 ${
-          isCardOpen ? "blur-md" : ""
+          isCardOpen || isFormOpen ? "blur-[3px]" : ""
         }`}
         onClick={() => {
           if (isCardOpen) setIsCardOpen(false);
+          if (isFormOpen) setIsFormOpen(false);
         }}
       >
+        {(isCardOpen || isFormOpen) && <div className="z-10 w-full h-full absolute"></div> }
         <h1 className="text-6xl font-bold">
           Welcome to{" "}
           <a
