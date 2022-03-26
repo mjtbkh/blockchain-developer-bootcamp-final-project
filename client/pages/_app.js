@@ -6,20 +6,26 @@ import {
   NotificationContextProvider,
   ThemeContextProvider,
   WalletContextProvider,
+  PublisherContextProvider,
 } from "../contexts";
+import React from "react";
 
 export default function MyApp({ Component, pageProps }) {
   return (
-    <ThemeContextProvider>
-      <WalletContextProvider>
-        <ChainIdContextProvider>
-          <FormContextProvider>
-            <NotificationContextProvider>
-              <Component {...pageProps} />
-            </NotificationContextProvider>
-          </FormContextProvider>
-        </ChainIdContextProvider>
-      </WalletContextProvider>
-    </ThemeContextProvider>
+    <React.StrictMode>
+      <ThemeContextProvider>
+        <WalletContextProvider>
+          <ChainIdContextProvider>
+            <FormContextProvider>
+              <PublisherContextProvider>
+                <NotificationContextProvider>
+                  <Component {...pageProps} />
+                </NotificationContextProvider>
+              </PublisherContextProvider>
+            </FormContextProvider>
+          </ChainIdContextProvider>
+        </WalletContextProvider>
+      </ThemeContextProvider>
+    </React.StrictMode>
   );
 }

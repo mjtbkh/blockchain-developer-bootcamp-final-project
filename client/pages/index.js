@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from "react";
+import ConnectContract from "../hooks/connectContract";
 import {
   requestAccount,
-  requestChainId,
   initProvider,
+  requestChainId,
 } from "../hooks/connectWallet";
 import { Cast, Footer, Header, Notification } from "../components";
 import {
@@ -10,25 +11,36 @@ import {
   NotificationContext,
   ThemeContext,
   WalletContext,
-  FormContext
+  FormContext,
+  PublisherContext,
 } from "../contexts";
 import detectEthereumProvider from "@metamask/detect-provider";
 import ConnectWallet from "../components/ConnectWallet";
 
 export default function Home() {
   const [isConnecting, setIsConnecting] = useState(false);
+  const [episodes, setEpisodes] = useState([]);
+  const [isFetching, setIsFetching] = useState(true);
   const { isDarkMode, setIsDarkMode } = useContext(ThemeContext);
-  const { currentWallet ,setCurrentWallet, isCardOpen, setIsCardOpen, setIsWalletConnected } =
-    useContext(WalletContext);
+  const {
+    setCurrentWallet,
+    isCardOpen,
+    setIsCardOpen,
+    isWalletConnected,
+    setIsWalletConnected,
+  } = useContext(WalletContext);
   const { setIsNotificationOpen, notificationMessage, setNotificationMessage } =
     useContext(NotificationContext);
   const { chainId, setChainId } = useContext(ChainIdContext);
   const { isFormOpen, setIsFormOpen } = useContext(FormContext);
+  const { isPublishersOpen, setIsPublishersOpen } =
+    useContext(PublisherContext);
 
   const fetchProvider = async () => {
     return await detectEthereumProvider();
   };
 
+  // check eth_chain_id after metamask is connected
   useEffect(() => {
     if (localStorage.getItem("connectedWallet") && chainId !== 4) {
       setNotificationMessage("Please switch your MetaMask to rinkeby network!");
@@ -36,6 +48,24 @@ export default function Home() {
     }
   }, [chainId]);
 
+  // fetch published episodes after metamask is connected
+  useEffect(async () => {
+    if (
+      typeof window.ethereum !== "undefined" &&
+      localStorage.getItem("connectedWallet")
+    ) {
+      await ConnectContract.connect().then(async () => {
+        await ConnectContract.getEpisodes().then((episodeArray) => {
+          setEpisodes(episodeArray);
+          setIsFetching(false);
+        });
+      });
+    } else {
+      setIsFetching(false);
+    }
+  }, [isWalletConnected]);
+
+  // initializing after client is first loaded
   useEffect(async () => {
     if (
       typeof localStorage !== "undefined" &&
@@ -43,8 +73,11 @@ export default function Home() {
       window.ethereum === (await fetchProvider()) &&
       window.ethereum.isConnected()
     ) {
-      setCurrentWallet(localStorage.getItem("connectedWallet"));
-      setIsWalletConnected(true);
+      await requestAccount().then((account) => {
+        localStorage.setItem("connectedWallet", account);
+        setCurrentWallet(account);
+        setIsWalletConnected(true);
+      });
     } else {
       localStorage.removeItem("connectedWallet");
     }
@@ -54,8 +87,10 @@ export default function Home() {
     }
   }, []);
 
+  // function to handle metamask connection
   const handleConnectWallet = async () => {
     setIsConnecting(true);
+
     if (typeof window.ethereum === "undefined") {
       console.log(typeof window.ethereum);
       setNotificationMessage(
@@ -65,6 +100,7 @@ export default function Home() {
       setIsConnecting(false);
       return 0;
     }
+
     if (!window.ethereum.isMetaMask) {
       setNotificationMessage(
         "MetaMask not detected! install from: https://metamask.io/"
@@ -73,28 +109,26 @@ export default function Home() {
       setIsConnecting(false);
       return 0;
     }
-    try {
-      await requestAccount().then(async () => {
-        await initProvider().then(async (address) => {
-          setCurrentWallet(address);
-          setIsWalletConnected(true);
-          localStorage.setItem("connectedWallet", address);
-          setIsConnecting(false);
 
-          await requestChainId().then((chainId) => {
-            if (chainId !== 4) {
-              setNotificationMessage(
-                "Please switch your MetaMask to rinkeby network!"
-              );
-              setIsNotificationOpen(true);
-              setChainId(chainId);
-            }
-          });
+    try {
+      await initProvider().then(async (address) => {
+        setCurrentWallet(address);
+        setIsWalletConnected(true);
+        localStorage.setItem("connectedWallet", address);
+        setIsConnecting(false);
+
+        await requestChainId().then((chainId) => {
+          if (chainId !== 4) {
+            setNotificationMessage(
+              "Please switch your MetaMask to rinkeby network!"
+            );
+            setIsNotificationOpen(true);
+            setChainId(chainId);
+          }
         });
       });
-    }
-    catch(e) {
-      console.log(`error cached: ${e}`)
+    } catch (e) {
+      console.log(`error cached: ${e}`);
     }
   };
 
@@ -108,14 +142,17 @@ export default function Home() {
 
       <main
         className={`dark:bg-gray-700 dark:text-white flex flex-col items-center justify-center w-full flex-1 px-20 py-32 text-center transition-all duration-300 z-10 ${
-          isCardOpen || isFormOpen ? "blur-[3px]" : ""
+          isCardOpen || isFormOpen || isPublishersOpen ? "blur-[3px]" : ""
         }`}
         onClick={() => {
           if (isCardOpen) setIsCardOpen(false);
           if (isFormOpen) setIsFormOpen(false);
+          if (isPublishersOpen) setIsPublishersOpen(false);
         }}
       >
-        {(isCardOpen || isFormOpen) && <div className="z-10 w-full h-full absolute"></div> }
+        {(isCardOpen || isFormOpen || isPublishersOpen) && (
+          <div className="z-10 w-full h-full absolute"></div>
+        )}
         <h1 className="text-6xl font-bold">
           Welcome to{" "}
           <a
@@ -131,31 +168,75 @@ export default function Home() {
           isConnecting={isConnecting}
         />
 
-        <h2 className="text-2xl font-black text-left mt-10">Episodes</h2>
-        <div className="flex flex-wrap items-center justify-around max-w-4xl mt-6 sm:w-full">
-          <Cast
-            link="https://nextjs.org/docs"
-            title="Documentation"
-            desc="Find in-depth information about Next.js features and API."
-          />
-
-          <Cast
-            link="https://nextjs.org/learn"
-            title="Learn"
-            desc="Learn about Next.js in an interactive course with quizzes!"
-          />
-
-          <Cast
-            link="https://github.com/vercel/next.js/tree/master/example"
-            title="Examples"
-            desc="Discover and deploy boilerplate example Next.js projects."
-          />
-
-          <Cast
-            link="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            title="Deploy"
-            desc="Instantly deploy your Next.js site to a public URL with Vercel."
-          />
+        <h2 className="text-2xl font-black text-left mt-10 flex items-center">
+          Published Episodes
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 animate-bounce"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 17l-4 4m0 0l-4-4m4 4V3"
+            />
+          </svg>
+        </h2>
+        <div className="flex flex-wrap mx-auto items-center justify-around max-w-4xl mt-6 sm:w-full">
+          {isFetching && episodes.length === 0 && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-12 w-12 animate-spin mx-auto"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          )}
+          {!isFetching && episodes.length === 0 && (
+            <h3 className="flex gap-2 mx-auto">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Please connect your wallet first, then we can grab the episodes
+              for you =)
+            </h3>
+          )}
+          <section className="flex flex-wrap-reverse justify-center gap-4">
+            {episodes.length !== 0 &&
+              episodes.map((episode, index) => {
+                return (
+                  <Cast
+                    key={index}
+                    episodeId={index}
+                    link={episode.link}
+                    title={episode.title}
+                    desc={episode.desc}
+                    pledge={episode.pledge}
+                  />
+                );
+              })}
+          </section>
         </div>
       </main>
 

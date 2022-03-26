@@ -1,21 +1,111 @@
 import Head from "next/head";
-import { useContext } from "react";
-import { AccountCard } from "./index";
+import { useContext, useEffect } from "react";
+import { AccountCard, PublishForm, PublishersForm } from "./index";
 import {
   NotificationContext,
   ThemeContext,
   WalletContext,
   FormContext,
+  PublisherContext,
 } from "../contexts";
-import PublishForm from "./PublishForm";
+import ConnectContract from "../hooks/connectContract";
+import { requestChainId } from "../hooks/connectWallet";
+import detectEthereumProvider from "@metamask/detect-provider";
 
 export default function Header({ title }) {
   const { isDarkMode, setIsDarkMode } = useContext(ThemeContext);
-  const { isCardOpen, setIsCardOpen, currentWallet, isWalletConnected } =
-    useContext(WalletContext);
+  const {
+    isAdmin,
+    setIsAdmin,
+    isPublisher,
+    setIsPublisher,
+    isSubscriber,
+    setIsSubscriber,
+    isCardOpen,
+    setIsCardOpen,
+    currentWallet,
+    isWalletConnected,
+  } = useContext(WalletContext);
   const { setIsNotificationOpen, setNotificationMessage } =
     useContext(NotificationContext);
   const { isFormOpen, setIsFormOpen } = useContext(FormContext);
+  const { isPublishersOpen, setIsPublishersOpen } =
+    useContext(PublisherContext);
+
+  // check if connected wallet has an admin role defined inside the contract instance
+  const hasAdminRole = async () => {
+    if (
+      typeof window.ethereum !== "undefined" &&
+      localStorage.getItem("connectedWallet")
+    ) {
+      await ConnectContract.connect().then(
+        await ConnectContract.hasRole("DEFAULT_ADMIN_ROLE").then((res) =>
+          setIsAdmin(res)
+        )
+      );
+    }
+  };
+
+  // check if connected wallet has a publisher role defined inside the contract instance
+  const hasPublisherRole = async () => {
+    if (
+      typeof window.ethereum !== "undefined" &&
+      localStorage.getItem("connectedWallet")
+    ) {
+      await ConnectContract.connect().then(
+        await ConnectContract.hasRole("PUBLISHER_ROLE").then((res) =>
+          setIsPublisher(res)
+        )
+      );
+    }
+  };
+
+  // check if connected wallet has a sunscriber role defined inside the contract instance
+  const hasSubscriberRole = async () => {
+    if (
+      window.ethereum !== "undefined" &&
+      localStorage.getItem("connectedWallet")
+    ) {
+      await ConnectContract.connect().then(
+        await ConnectContract.hasRole("SUBSCRIBER_ROLE").then((res) =>
+          setIsSubscriber(res)
+        )
+      );
+    }
+  };
+
+  // call the subscription function from contract instance
+  const handleSubscription = async () => {
+    if (
+      typeof window.ethereum !== "undefined" &&
+      localStorage.getItem("connectedWallet")
+    ) {
+      await ConnectContract.connect().then(
+        await ConnectContract.subscribeToPodcast().then((res) =>
+          setIsSubscriber(res)
+        )
+      );
+    }
+  };
+
+  // force update DOM after user subscription is successful
+  useEffect(() => {}, [isSubscriber]);
+
+  // get user roles once the wallet is connected
+  useEffect(async () => {
+    if (window.ethereum !== "undefined" && isWalletConnected === true) {
+      await detectEthereumProvider({ mustBeMetaMask: true, silent: true }).then(
+        async (provider) => {
+          if (provider.isConnected() && (await requestChainId()) === 4) {
+            hasAdminRole();
+            hasPublisherRole();
+            hasSubscriberRole();
+          }
+        }
+      );
+    }
+  }, [isWalletConnected]);
+
   return (
     <>
       <Head>
@@ -33,9 +123,20 @@ export default function Header({ title }) {
         />
       </Head>
 
-      <AccountCard isOpen={isCardOpen} address={currentWallet} />
+      {currentWallet && (
+        <AccountCard isOpen={isCardOpen} address={currentWallet} />
+      )}
 
-      <PublishForm isOpen={isFormOpen} setIsOpen={setIsFormOpen} />
+      {currentWallet && (
+        <PublishForm isOpen={isFormOpen} setIsOpen={setIsFormOpen} />
+      )}
+
+      {currentWallet && (
+        <PublishersForm
+          isOpen={isPublishersOpen}
+          setIsOpen={setIsPublishersOpen}
+        />
+      )}
 
       <header className="flex flex-row bg-white dark:bg-indigo-700 bg-opacity-40 dark:bg-opacity-60 p-4 justify-between w-full fixed top-0 shadow-sm transition-all duration-300 z-20">
         <section className="flex flex-row gap-4">
@@ -73,6 +174,7 @@ export default function Header({ title }) {
                   className="select-none"
                   onClick={() => {
                     if (isFormOpen) setIsFormOpen(false);
+                    if (isPublishersOpen) setIsPublishersOpen(false);
                     setIsCardOpen(!isCardOpen);
                   }}
                 >
@@ -85,7 +187,7 @@ export default function Header({ title }) {
             )}
           </section>
 
-          {isWalletConnected && (
+          {isWalletConnected && isPublisher && (
             <section className="flex items-center overflow-hidden gap-2 pr-2 bg-gray-800 text-white rounded-md cursor-pointer">
               <span className="bg-gray-700 text-white p-1">
                 <svg
@@ -106,6 +208,7 @@ export default function Header({ title }) {
               <button
                 onClick={() => {
                   if (isCardOpen) setIsCardOpen(false);
+                  if (isPublishersOpen) setIsPublishersOpen(false);
                   setIsFormOpen(!isFormOpen);
                 }}
               >
@@ -113,47 +216,108 @@ export default function Header({ title }) {
               </button>
             </section>
           )}
+          {isWalletConnected && isAdmin && (
+            <section className="flex items-center overflow-hidden gap-2 pr-2 bg-gray-800 text-white rounded-md cursor-pointer">
+              <span className="bg-gray-700 text-white p-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </span>
+              <button
+                onClick={() => {
+                  if (isCardOpen) setIsCardOpen(false);
+                  if (isFormOpen) setIsFormOpen(false);
+                  setIsPublishersOpen(!isPublishersOpen);
+                }}
+              >
+                Publishers
+              </button>
+            </section>
+          )}
         </section>
 
-        <section
-          className="bg-gray-800 text-white rounded-full p-1 cursor-pointer"
-          onClick={() => {
-            localStorage.setItem("isDarkMode", isDarkMode ? 0 : 1);
-            setIsDarkMode(!isDarkMode);
-          }}
-        >
-          {!isDarkMode && (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-              />
-            </svg>
-          )}
-          {isDarkMode && (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          )}
+        <section className="flex flex-row gap-4">
+          <section
+            className={`flex flex-row items-center overflow-hidden gap-2 pr-2 bg-green-500 text-white rounded-md cursor-pointer ${
+              isSubscriber || isAdmin ? "grayscale" : ""
+            }`}
+          >
+            <span className="bg-green-600 text-white p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </span>
+            {!isSubscriber && !isAdmin && (
+              <button onClick={handleSubscription} disabled={true}>
+                Subscribe
+              </button>
+            )}
+            {isSubscriber && <button disabled={true}>Subscribed!</button>}
+            {!isSubscriber && isAdmin && <button>You're admin</button>}
+          </section>
+
+          <section
+            className="bg-gray-800 text-white rounded-full p-1 cursor-pointer"
+            onClick={() => {
+              localStorage.setItem("isDarkMode", isDarkMode ? 0 : 1);
+              setIsDarkMode(!isDarkMode);
+            }}
+          >
+            {!isDarkMode && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                />
+              </svg>
+            )}
+            {isDarkMode && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+            )}
+          </section>
         </section>
       </header>
     </>

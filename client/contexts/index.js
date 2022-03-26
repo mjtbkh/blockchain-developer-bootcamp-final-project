@@ -3,3 +3,4 @@ export {default as NotificationContextProvider, NotificationContext} from './Not
 export {default as ThemeContextProvider, ThemeContext} from './ThemeContext';
 export {default as WalletContextProvider, WalletContext} from './WalletContext';
 export {default as FormContextProvider, FormContext} from './FormContext';
+export {default as PublisherContextProvider, PublisherContext} from './PublisherContext';

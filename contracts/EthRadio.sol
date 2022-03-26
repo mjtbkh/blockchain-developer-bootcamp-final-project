@@ -29,15 +29,18 @@ contract EthRadio is
     mapping(address => Subscriber) private Subscribers;
     mapping(uint16 => Episode) public PublishedEpisodes;
     mapping(address => uint256) private Balances;
+    mapping(uint16 => mapping(address => bool)) private HasSubscriber;
 
-    // Episode struct defining how an episode is structured
+    /// @notice Episode struct defining how an episode is structured
     struct Episode {
         uint16 id;
         string title;
         string link;
+        string desc;
         uint256 pledge;
     }
 
+    /// @notice Subscriber struct defining how a user is stuctured
     struct Subscriber {
         uint64 id;
         bool isActive;
@@ -103,6 +106,10 @@ contract EthRadio is
     /// @param _amount The amount of ether withdrawn, in wei
     event logWithdraw(address _subscriberId, uint256 _amount);
 
+    /// @notice event for subscription of user to an episode
+    /// @param _episodeId The Id of subscribed episode
+    event logEpisodeSubscribed(uint16 _episodeId);
+
     /// @notice event for propagating errors to the end user
     /// @dev The error message returned from .call() as a `bytes` type
     /// @param _message The messages returned in bytes format
@@ -158,6 +165,20 @@ contract EthRadio is
         emit logDeposit(msg.sender, msg.value);
     }
 
+    /// @notice Get user balance deposited to EthRadio contract
+    function getBalance() public view onlyRole(SUBSCRIBER_ROLE) returns (uint256) {
+        return Balances[msg.sender];
+    }
+
+    /// @notice Subscriber can choose to subscribe an episode
+    /// @dev Subscriber needs to have balance and can then subscribe to a specific episode they want
+    function subscribeToEpisode(uint16 _episodeId) public onlyRole(SUBSCRIBER_ROLE) {
+        require(Balances[msg.sender] >= PublishedEpisodes[_episodeId].pledge);
+        HasSubscriber[_episodeId][msg.sender] = true;
+
+        emit logEpisodeSubscribed(_episodeId);
+    }
+
     /// @notice Subscribers are able to withdraw thier funds from the contract
     /// @param _amount The amount of ether in wei going to be withdrawn from contract
     function withdraw(uint256 _amount) public payable onlyRole(SUBSCRIBER_ROLE) {
@@ -178,16 +199,17 @@ contract EthRadio is
 
     }
 
-    function getBalance(address _userId) public view onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256 Balance) {
+    function getBalanceByAdmin(address _userId) public view onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256 Balance) {
         Balance = Balances[_userId];
     }
 
     /// @notice publishers are able to publish a new episode
-    function publishEpisode(string memory _link, string memory _title, uint256 _pledge) public onlyRole(PUBLISHER_ROLE) {
+    function publishEpisode(string memory _link, string memory _title, string memory _desc, uint256 _pledge) public onlyRole(PUBLISHER_ROLE) {
         PublishedEpisodes[episodeCount] = Episode({
             id: episodeCount,
             title: _title,
             link: _link,
+            desc: _desc,
             pledge: _pledge
         });
 
@@ -228,6 +250,10 @@ contract EthRadio is
         Episode[] memory Episodes = new Episode[](episodeCount);
         for (uint16 index = 0; index < episodeCount; index++) {
             Episodes[index] = PublishedEpisodes[index];
+
+            if(!HasSubscriber[index][msg.sender]) {
+                Episodes[index].link = "";
+            }
         }
 
         return Episodes;

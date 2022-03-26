@@ -1,7 +1,14 @@
+/**
+ * Utitlity functions to handle interactions between client and ethereum network
+ */
+
 import { ethers } from "ethers";
 
 export const requestAccount = async () => {
-  await window.ethereum.request({ method: "eth_requestAccounts" });
+  let accounts = await window.ethereum.request({
+    method: "eth_requestAccounts",
+  });
+  return accounts[0];
 };
 
 export const initProvider = async () => {

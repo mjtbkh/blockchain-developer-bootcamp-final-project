@@ -188,6 +188,7 @@ contract("EthRadio", function (accounts) {
       const tx = await instance.publishEpisode(
         "https://virgool.io/@mjtbkh",
         "Episode 1: Hello, world!",
+        "This is a description for episode",
         web3.utils.toWei("0.0005"),
         { from: _owner }
       );
@@ -207,6 +208,7 @@ contract("EthRadio", function (accounts) {
       await instance.publishEpisode(
         "string_url",
         "string_title",
+        "string_desc",
         5 * 10 ** 12,
         { from: _owner }
       );

@@ -1,23 +1,49 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { FormContext } from "../contexts/FormContext";
+import ConnectContract from "../hooks/connectContract";
 
 export default function PublishForm() {
-  const { isFormOpen, episodeObject, setEpisodeObject } =
-    useContext(FormContext);
-  const [title, setTitle] = useState("");
+  const { isFormOpen } = useContext(FormContext);
   const [link, setLink] = useState("");
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
   const [pledge, setPledge] = useState("");
+  const [publishEventCount, setPublishEventCount] = useState(0);
+
+  // force update DOM aftter a new publication
+  useEffect(() => {}, [publishEventCount]);
+
+  // prevent the app from reloading and handle publish transaction
+  const handlePublish = async (e) => {
+    e.preventDefault();
+    await ConnectContract.connect().then(
+      async () =>
+        await ConnectContract.publishEpisode(link, title, desc, pledge).then(
+          async (pubTx) => {
+            if (
+              (await pubTx.logs) &&
+              pubTx.logs[0].event === "logEpisodePublsihed"
+            ) {
+              setPublishEventCount(publishEventCount++);
+            }
+          }
+        )
+    );
+  };
 
   return (
     <>
       {isFormOpen && (
-        <dialog className="flex flex-col top-1/3 w-1/2 text-center ring-2 ring-gray-300 dark:ring-gray-600 bg-gray-200 border z-20 text-gray-700 dark:bg-gray-800 dark:text-gray-50 dark:border-0 p-0 rounded-md shadow-lg">
+        <dialog className="flex flex-col top-1/4 w-1/2 text-center ring-2 ring-gray-300 dark:ring-gray-600 bg-gray-200 border z-20 text-gray-700 dark:bg-gray-800 dark:text-gray-50 dark:border-0 p-0 rounded-md shadow-lg">
           <h2 className="py-4">Publish a new episode</h2>
-          <form className="flex flex-col gap-4 px-4 py-6 bg-white dark:bg-gray-700 dark:text-white align-middle justify-center">
-            <div className="flex flex-row gap-2 justify-between items-center">
+          <form
+            className="flex flex-col gap-4 px-4 py-6 bg-white dark:bg-gray-700 dark:text-white align-middle justify-center"
+            onSubmit={(e) => handlePublish(e)}
+          >
+            <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
               <label htmlFor="title">title</label>
               <input
-                className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-white w-5/6"
+                className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-gray-900 dark:text-white w-5/6"
                 type="text"
                 id="title"
                 name="title"
@@ -25,10 +51,10 @@ export default function PublishForm() {
                 placeholder="London hard-fork: What EIP-1559 did"
               />
             </div>
-            <div className="flex flex-row gap-2 justify-between items-center">
+            <div className="flex flex-col md:flex-row  gap-2 justify-between items-center">
               <label htmlFor="link">link</label>
               <input
-                className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-white w-5/6"
+                className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-gray-900 dark:text-white w-5/6"
                 type="text"
                 id="link"
                 name="link"
@@ -36,10 +62,22 @@ export default function PublishForm() {
                 placeholder="https://link.to/episode"
               />
             </div>
-            <div className="flex flex-row gap-2 justify-between items-center">
+            <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
+              <label htmlFor="link">description</label>
+              <textarea
+                className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-gray-900 dark:text-white w-5/6"
+                type="text"
+                id="link"
+                name="link"
+                rows="3"
+                onChange={(e) => setDesc(e.target.value)}
+                placeholder="This episode will give you an overview of what London hard-fork did to Ethereum network."
+              ></textarea>
+            </div>
+            <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
               <label htmlFor="pledge">pledge</label>
               <input
-                className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-white w-5/6"
+                className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-gray-900 dark:text-white w-5/6"
                 type="text"
                 id="pledge"
                 name="pledge"
