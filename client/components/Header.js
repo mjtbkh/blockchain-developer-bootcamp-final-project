@@ -93,10 +93,10 @@ export default function Header({ title }) {
 
   // get user roles once the wallet is connected
   useEffect(async () => {
-    if (window.ethereum !== "undefined" && isWalletConnected === true) {
-      await detectEthereumProvider({ mustBeMetaMask: true, silent: true }).then(
+    if (window.ethereum !== "undefined" && isWalletConnected) {
+      await detectEthereumProvider().then(
         async (provider) => {
-          if (provider.isConnected() && (await requestChainId()) === 4) {
+          if (provider.isConnected()) {
             hasAdminRole();
             hasPublisherRole();
             hasSubscriberRole();
