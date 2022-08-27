@@ -1,14 +1,17 @@
 import { useContext, useEffect, useState } from "react";
 import ConnectContract from "../hooks/connectContract";
-import { WalletContext } from "../contexts/WalletContext";
+import { WalletContext, NotificationContext } from "../contexts";
 import { requestBalance, requestAccount } from "../hooks/connectWallet";
-import { FixedNumber } from "ethers";
+import { ethers, FixedNumber } from "ethers";
 
 export default function AccountCard() {
   const { currentWallet, isCardOpen, setIsCardOpen } =
     useContext(WalletContext);
+  const { setIsNotificationOpen, notificationMessage, setNotificationMessage } =
+    useContext(NotificationContext);
   const [walletBalance, setWalletBalance] = useState("");
-  const [userBalance, setUseBalance] = useState("");
+  const [userBalance, setUserBalance] = useState("");
+  const [amountToDeposit, setAmountToDeposit] = useState("");
 
   useEffect(async () => {
     if (window.ethereum !== "undefined" && currentWallet) {
@@ -22,16 +25,35 @@ export default function AccountCard() {
   // get user balance held in the connected wallet
   const getWalletBalance = async () => {
     await requestBalance().then((res) =>
-      setWalletBalance(Number(FixedNumber.fromValue(res, 18)).toFixed(4))
+      setWalletBalance(
+        Number(FixedNumber.fromValue(res, 18)).toFixed(4).toString()
+      )
     );
   };
 
   // get user balance deposited to the contract
   const getUserBalance = async () => {
     await ConnectContract.connect().then(
-      await ConnectContract.getBalance().then((balance) =>
-        setUseBalance(balance)
-      )
+      await ConnectContract.hasRole("SUBSCRIBER_ROLE").then(async (res) => {
+        if (res)
+          await ConnectContract.getBalance().then((balance) =>
+            setUserBalance(ethers.utils.formatEther(balance))
+          );
+        else setUserBalance("0");
+      })
+    );
+  };
+
+  // handle ETH deposition to contract from subscribers
+  const handleEthDeposit = async () => {
+    await ConnectContract.connect().then(
+      await ConnectContract.hasRole("SUBSCRIBER_ROLE").then(async (res) => {
+        if (res) await ConnectContract.depositToEthRadio(amountToDeposit);
+        else {
+          setNotificationMessage("ETH deposit failed...");
+          setIsNotificationOpen(true);
+        }
+      })
     );
   };
 
@@ -182,9 +204,13 @@ export default function AccountCard() {
               <input
                 type="text"
                 placeholder="ΞETH to deposit"
-                className="p-1 ring-1 ring-gray-300 dark:bg-gray-200 rounded-sm h-8 focus:border-0"
+                className="p-1 ring-1 ring-gray-300 dark:bg-gray-200 dark:text-gray-800 rounded-sm h-8 focus:border-0"
+                onChange={(e) => setAmountToDeposit(String(e.target.value))}
               />
-              <button className="bg-blue-500 text-white rounded-md py-1 px-2 h-8">
+              <button
+                className="bg-blue-500 text-white rounded-md py-1 px-2 h-8"
+                onClick={handleEthDeposit}
+              >
                 Deposit
               </button>
             </section>

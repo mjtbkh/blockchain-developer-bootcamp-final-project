@@ -14,6 +14,7 @@ export const requestAccount = async () => {
 export const initProvider = async () => {
   if (typeof window.ethereum !== "undefined") {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send('eth_requestAccounts');
     let signer = provider.getSigner();
     return await signer.getAddress();
   }

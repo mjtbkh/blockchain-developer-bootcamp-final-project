@@ -11,7 +11,7 @@ class ConnectContract {
   static async connect() {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     this.contract = new ethers.Contract(
-      "0xa9D5B75aDc45e5586e0cD45623Ef6D38b0246E35",
+      "0x8E11dC9D74B8913E16e13171D0F3a219fd13e486",
       abi,
       provider
     );
@@ -91,13 +91,17 @@ class ConnectContract {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     let signer = this.contract.connect(provider.getSigner());
     let subscribeToPodcastTx = await signer.subscribe();
+    console.log("subscribing...");
 
     if (
       subscribeToPodcastTx.logs &&
       subscribeToPodcastTx.logs[0].event === "logNewSubscription"
-    )
-      return true;
-    return false;
+    ) {
+      console.log("subscription failed!");
+      return false;
+    }
+    console.log("subscription sucessful");
+    return true;
   }
 
   static async depositToEthRadio(valueInEth) {
@@ -106,8 +110,13 @@ class ConnectContract {
     let depositTx = await signer.deposit({
       value: ethers.utils.parseUnits(valueInEth, "ether"),
     });
+    console.log("depositing...");
 
-    if (depositTx.logs && depositTx.logs[0].event === "logDeposit") return true;
+    if (depositTx.logs && depositTx.logs[0].event === "logDeposit") {
+      console.log("deposition failed!");
+      return true;
+    }
+    console.log("deposition sucessful!");
     return false;
   }
 
@@ -115,9 +124,12 @@ class ConnectContract {
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     let signer = this.contract.connect(provider.getSigner());
     let subscribeToEpisodeTx = await signer.subscribeToEpisode(episodeId);
-
-    if (subscribeToEpisodeTx.logs[0].event === "logEpisodeSubscribed")
+    console.log("subscribing to episode...");
+    if (subscribeToEpisodeTx.logs[0].event === "logEpisodeSubscribed") {
+      console.log("subscription failed!");
       return true;
+    }
+    console.log("subscription successful!");
     return false;
   }
 }

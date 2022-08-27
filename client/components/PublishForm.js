@@ -4,7 +4,7 @@ import ConnectContract from "../hooks/connectContract";
 
 export default function PublishForm() {
   const { isFormOpen } = useContext(FormContext);
-  const [link, setLink] = useState("");
+  const [CID, setCID] = useState("");
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [pledge, setPledge] = useState("");
@@ -18,11 +18,13 @@ export default function PublishForm() {
     e.preventDefault();
     await ConnectContract.connect().then(
       async () =>
-        await ConnectContract.publishEpisode(link, title, desc, pledge).then(
+        await ConnectContract.publishEpisode(CID, title, desc, pledge).then(
           async (pubTx) => {
+            await pubTx.wait();
+            console.log(pubTx.logs);
             if (
               (await pubTx.logs) &&
-              pubTx.logs[0].event === "logEpisodePublsihed"
+              pubTx.logs[0].event === "logEpisodePublished"
             ) {
               setPublishEventCount(publishEventCount++);
             }
@@ -52,23 +54,23 @@ export default function PublishForm() {
               />
             </div>
             <div className="flex flex-col md:flex-row  gap-2 justify-between items-center">
-              <label htmlFor="link">link</label>
+              <label htmlFor="cid">IPFS CID</label>
               <input
                 className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-gray-900 dark:text-white w-5/6"
                 type="text"
-                id="link"
-                name="link"
-                onChange={(e) => setLink(e.target.value)}
-                placeholder="https://link.to/episode"
+                id="cid"
+                name="cid"
+                onChange={(e) => setCID(e.target.value)}
+                placeholder="Qmxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
               />
             </div>
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
-              <label htmlFor="link">description</label>
+              <label htmlFor="desc">description</label>
               <textarea
                 className="p-2 dark:bg-gray-600 ring-2 ring-gray-500 rounded-sm text-gray-900 dark:text-white w-5/6"
                 type="text"
-                id="link"
-                name="link"
+                id="desc"
+                name="desc"
                 rows="3"
                 onChange={(e) => setDesc(e.target.value)}
                 placeholder="This episode will give you an overview of what London hard-fork did to Ethereum network."

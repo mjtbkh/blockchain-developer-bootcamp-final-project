@@ -1,10 +1,10 @@
-//const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+// const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
-//const EthRadio = artifacts.require("../contracts/EthRadio.sol");
-//const EthRadioV2 = artifacts.require("../contracts/EthRadio_v2.sol");
+// const EthRadio = artifacts.require("../contracts/EthRadio.sol");
+// const EthRadio_v2 = artifacts.require("../contracts/EthRadio_v2.sol");
 
-/*module.exports = async function(deployer) {
-    const previous = await EthRadio.deployed();
-    const instance = await upgradeProxy(previous.address, EthRadioV2, {deployer});
-    console.log("Upgraded", instance.address);
-}*/
+// module.exports = async function(deployer) {
+//     const previous = await EthRadio.deployed();
+//     const instance = await upgradeProxy(previous.address, EthRadio_v2, {deployer});
+//     console.log("Upgraded", instance.address);
+// }

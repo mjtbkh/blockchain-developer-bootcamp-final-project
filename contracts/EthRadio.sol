@@ -35,7 +35,7 @@ contract EthRadio is
     struct Episode {
         uint16 id;
         string title;
-        string link;
+        string cid;
         string desc;
         uint256 pledge;
     }
@@ -204,11 +204,11 @@ contract EthRadio is
     }
 
     /// @notice publishers are able to publish a new episode
-    function publishEpisode(string memory _link, string memory _title, string memory _desc, uint256 _pledge) public onlyRole(PUBLISHER_ROLE) {
+    function publishEpisode(string memory _cid, string memory _title, string memory _desc, uint256 _pledge) public onlyRole(PUBLISHER_ROLE) {
         PublishedEpisodes[episodeCount] = Episode({
             id: episodeCount,
             title: _title,
-            link: _link,
+            cid: _cid,
             desc: _desc,
             pledge: _pledge
         });
@@ -252,7 +252,7 @@ contract EthRadio is
             Episodes[index] = PublishedEpisodes[index];
 
             if(!HasSubscriber[index][msg.sender]) {
-                Episodes[index].link = "";
+                Episodes[index].cid = "";
             }
         }
 

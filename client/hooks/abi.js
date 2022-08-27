@@ -322,7 +322,7 @@ export const abi = [
       },
       {
         internalType: "string",
-        name: "link",
+        name: "cid",
         type: "string",
       },
       {
@@ -660,7 +660,7 @@ export const abi = [
     inputs: [
       {
         internalType: "string",
-        name: "_link",
+        name: "_cid",
         type: "string",
       },
       {
@@ -763,7 +763,7 @@ export const abi = [
           },
           {
             internalType: "string",
-            name: "link",
+            name: "cid",
             type: "string",
           },
           {

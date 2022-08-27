@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import ConnectContract from "../hooks/connectContract";
 import { WalletContext } from "../contexts";
 
-export default function Cast({ episodeId, link, title, desc, pledge }) {
+export default function Cast({ episodeId, cid, title, desc, pledge }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const { isSubscriber } = useContext(WalletContext);
 
@@ -26,8 +26,8 @@ export default function Cast({ episodeId, link, title, desc, pledge }) {
     >
       <h3 className="text-2xl font-bold">{title} &rarr;</h3>
       <p className="mt-4 text-xl">{desc}</p>
-      {link && (
-        <a href={link}>
+      {cid && (
+        <a href={`https://ipfs.io/ipfs/${cid}/`}>
           Get Episode{" "}
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@ export default function Cast({ episodeId, link, title, desc, pledge }) {
           </svg>
         </a>
       )}
-      {!link && (
+      {!cid && (
         <button
           disabled={isSubscriber ? false : true}
           onClick={() => handleUnlock(episodeId)}

@@ -270,12 +270,12 @@ export default function Header({ title }) {
               </svg>
             </span>
             {!isSubscriber && !isAdmin && (
-              <button onClick={handleSubscription} disabled={true}>
+              <button onClick={handleSubscription}>
                 Subscribe
               </button>
             )}
             {isSubscriber && <button disabled={true}>Subscribed!</button>}
-            {!isSubscriber && isAdmin && <button>You're admin</button>}
+            {!isSubscriber && isAdmin && <button disabled className="cursor-not-allowed">You're admin</button>}
           </section>
 
           <section
